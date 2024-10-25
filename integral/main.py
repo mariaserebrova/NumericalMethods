@@ -1,21 +1,28 @@
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 from scipy.integrate import quad
+
+from package.methods.compound_quadrature_formulas import *
+
 
 def f(x):
     return(3.5 * np.cos(1.5 * x) * np.exp(x / 4) + 4 * np.sin(3.5 * x) * np.exp(-1 * 3 * x) + 4 * x)
+
 
 def p(x, a=2.5, b=3.3, alpha=2/3, beta=0):
     if x <= a or x >= b:
         return 0  # возвращаем 0, если x выходит за пределы
     return (x - a) ** (-1 * alpha) * (b - x) ** (-1 * beta)
 
+
 def F(x):
     return f(x) * p(x)
+
 
 def calculate_exact_integral(a, b):
     result, _ = quad(f, a, b)  # Используем quad из scipy для вычисления интеграла
     return result
+
 
 def compute_errors(a, b, n_values, exact_value):
     errors = {
@@ -23,7 +30,7 @@ def compute_errors(a, b, n_values, exact_value):
         'Middle Rectangular': [],
         'Trapezoid': [],
         'Simpson': [],
-        'Newton-Cotes': []
+        'Newton-Cotes': [],
     }
 
     for n in n_values:
@@ -34,6 +41,7 @@ def compute_errors(a, b, n_values, exact_value):
         errors['Newton-Cotes'].append(abs(res_newton_cotes(a, b, n) - exact_value))
 
     return errors
+
 
 def plot_errors(errors, n_values):
     plt.figure(figsize=(10, 6))
@@ -49,6 +57,7 @@ def plot_errors(errors, n_values):
     plt.legend()
 
     plt.show()
+
 
 def plot_newton_cotes_error(errors, n_values):
     plt.figure(figsize=(8, 5))
@@ -72,6 +81,7 @@ def compute_moments_newton_cotes(a, z_i, z_i_1, alpha = 0.6):
 
     return mu_i0, mu_i1, mu_i2
 
+
 def compute_weights_newton_cotes(a, b, z_i, z_i_1, alpha = 0, beta = 0.6):
     z_i_half = (z_i_1 + z_i) / 2
 
@@ -83,7 +93,7 @@ def compute_weights_newton_cotes(a, b, z_i, z_i_1, alpha = 0, beta = 0.6):
 
     return A_i1, A_i2, A_i3
 
-import numpy as np
+
 
 # решение системы линейных уравнений для нахождения коэффициентов A_j
 def solve_linear_system(x_values, mu_values):
@@ -96,6 +106,7 @@ def solve_linear_system(x_values, mu_values):
 
     A_values = np.linalg.solve(matrix, mu_values)
     return A_values
+
 
 def res_newton_cotes(a, b, n, alpha=0, beta=0.6):
     z = np.linspace(a, b, n)
@@ -117,6 +128,7 @@ def res_newton_cotes(a, b, n, alpha=0, beta=0.6):
 
     return res
 
+
 def __main__():
     a = 0
     b = 2
@@ -126,6 +138,7 @@ def __main__():
     errors = compute_errors(a, b, n_values, exact_integral_value)
     plot_errors(errors, n_values)
     plot_newton_cotes_error(errors, n_values)
+
 
 if __name__ == "__main__":
     __main__()
