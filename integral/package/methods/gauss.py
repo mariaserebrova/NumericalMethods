@@ -1,4 +1,5 @@
 import numpy as np
+from numpy.linalg import solve
 
 def f(x):
     """Функция для интегрирования."""
@@ -16,23 +17,20 @@ def F(x):
     """Комбинированная функция для интегрирования."""
     return f(x) * p(x)
 
-
 def moment(a: float, b: float, alpha: float, beta: float, degree: int) -> float:
+    """Функция для вычисления моментов."""
     coeff = max(alpha, beta)
     moment_val = lambda x: x ** (degree - coeff + 1) / (degree - coeff + 1)
-
     return moment_val(b) - moment_val(a)
 
 def cardano_formula(poly: np.ndarray) -> np.ndarray:
-    """Формула Кардано для нахождения корней кубического уравнения"""
+    """Формула Кардано для нахождения корней кубического уравнения."""
     q = (2 * poly[1] ** 3 / (54 * poly[0] ** 3)
          - poly[1] * poly[2] / (6 * poly[0] ** 2)
          + poly[3] / poly[0] / 2)
 
     p = (3 * poly[0] * poly[2] - poly[1] ** 2) / (9 * poly[0] ** 2)
 
-    # Нас интересует только та часть формулы, где (q ** 2 + p ** 3) < 0. В методе Гаусса при разумном
-    # числе разбиений, это всегда выполняется
     r = np.sign(q) * np.sqrt(np.abs(p))
     phi = np.arccos(q / r ** 3)
 
@@ -46,14 +44,13 @@ def cardano_formula(poly: np.ndarray) -> np.ndarray:
     return roots
 
 def quad_gauss(func, a: float, b: float, alpha: float = 0, beta: float = 0, num_partitions: int = 100) -> float:
-    """Квадратичная формула Гаусса"""
+    """Квадратичная формула Гаусса."""
     if alpha == 0:  # Для удобства подсчета моментов, заменим переменную интегрирования
         bias, func_ = b, lambda x: func(bias - x)
     else:
         bias, func_ = a, lambda x: func(x + bias)
 
     a, b = 0, b - a
-
     result = 0
     num_nodes = 3
 
@@ -68,7 +65,7 @@ def quad_gauss(func, a: float, b: float, alpha: float = 0, beta: float = 0, num_
         n_range = np.arange(num_nodes)
         mu_matrix = moments[n_range.reshape(-1, 1) + n_range]
         mu_vector = moments[num_nodes:]
-        a_coeffs = np.linalg.solve(mu_matrix, -mu_vector).flatten()
+        a_coeffs = solve(mu_matrix, -mu_vector).flatten()
 
         # Корни уравнения являются узлами
         poly_coeffs = np.append([1], a_coeffs[::-1])
@@ -76,74 +73,10 @@ def quad_gauss(func, a: float, b: float, alpha: float = 0, beta: float = 0, num_
 
         # Решаем последнюю СЛАУ и получаем квадратурные коэффициенты
         nodes_matrix = np.array([nodes ** s for s in range(num_nodes)])
-
         mu_vector = moments[:num_nodes]
         A_coeffs = solve(nodes_matrix, mu_vector)
 
+        # Добавляем вклад текущего интервала в результат
         result += A_coeffs @ func_(nodes)
 
     return result
-
-
-
-
-
-
-# def compute_moments_gauss(a, z_i, z_i_1, alpha=0.6):
-#     """Вычисляет моменты для метода Гаусса."""
-#     mu_i0 = ((z_i - a) ** (1 - alpha) - (z_i_1 - a) ** (1 - alpha)) / (1 - alpha)
-#     mu_i1 = ((z_i - a) ** (2 - alpha) - (z_i_1 - a) ** (2 - alpha)) / (2 - alpha) + a * mu_i0
-#     mu_i2 = ((z_i - a) ** (3 - alpha) - (z_i_1 - a) ** (3 - alpha)) / (3 - alpha) + 2 * a * mu_i1 - a**2 * mu_i0
-
-#     return mu_i0, mu_i1, mu_i2
-
-# def compute_a_gauss(a, mu, n):
-#     """
-#     Решает систему линейных уравнений:
-#     ∑_(j=0)^(n-1) a_j μ_(j+s) = -μ_(n+s), s=0,...,n-1.
-
-#     :param a: Вектор коэффициентов a_j.
-#     :param mu: Вектор значений моментов μ.
-#     :param n: Размерность системы.
-#     :return: Вектор решений.
-#     """
-#     A = np.zeros((n, n))
-#     b = np.zeros(n)
-
-#     for s in range(n):
-#         for j in range(n):
-#             A[s, j] = a[j] * mu[j + s]
-#         b[s] = -mu[n + s]
-
-#     solutions = np.linalg.solve(A, b)
-#     return solutions
-
-# def find_nodes(coefficients):
-#     """
-#     Находит узлы многочлена w(x) = 0.
-
-#     :param coefficients: Список коэффициентов многочлена, начиная с a_n (высший степень).
-#     :return: Корни (узлы) многочлена.
-#     """
-#     return np.roots(coefficients)
-
-# def solve_linear_system(A, mu):
-#     """
-#     Решает систему линейных уравнений A @ x = mu.
-
-#     :param A: Матрица коэффициентов.
-#     :param mu: Вектор правых частей.
-#     :return: Решение (узлы x_j).
-#     """
-#     return np.linalg.solve(A, mu)
-
-# def gauss_quadrature(nodes, weights):
-#     """
-#     Вычисляет значение интеграла с помощью квадратурной формулы Гаусса.
-
-#     :param nodes: Узлы (корни многочлена).
-#     :param weights: Веса, соответствующие узлам.
-#     :return: Значение интеграла.
-#     """
-#     integral = sum(weights[j] * F(nodes[j]) for j in range(len(nodes)))
-#     return integral
