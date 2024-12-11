@@ -8,13 +8,14 @@ from package.methods.gauss import *
 from package.methods.richardson import *
 from package.methods.compound_quadrature_formulas import quad
 
-
 from tqdm import trange
+from copy import deepcopy
+from prettytable import PrettyTable
 
 
 def f(x):
     """Функция для интегрирования."""
-    return (3.5 * np.cos(1.5 * x) * np.exp(x / 4) +
+    return (3 * np.cos(1.5 * x) * np.exp(x / 4) +
             4 * np.sin(3.5 * x) * np.exp(-3 * x) +
             4 * x)
 
@@ -27,52 +28,6 @@ def p(x, a=2.5, b=3.3, alpha=2/3, beta=0):
 def F(x):
     """Комбинированная функция для интегрирования."""
     return f(x) * p(x)
-
-def calculate_exact_integral(a, b):
-    """Вычисляет точное значение интеграла."""
-    result, _ = quad(f, a, b)
-    return result
-
-def compute_errors(a, b, n_values, exact_value):
-    """Вычисляет погрешности для различных методов интегрирования."""
-    errors = {
-        'Left Rectangular': [],
-        'Middle Rectangular': [],
-        'Trapezoid': [],
-        'Simpson': [],
-        'Newton-Cotes': [],
-        'Gauss': [],  # Добавляем метод Гаусса
-    }
-
-    for n in n_values:
-        errors['Left Rectangular'].append(abs(left_rectangular(a, b, n) - exact_value))
-        errors['Middle Rectangular'].append(abs(middle_rectangular(a, b, n) - exact_value))
-        errors['Trapezoid'].append(abs(trapezoid(a, b, n) - exact_value))
-        errors['Simpson'].append(abs(simpson(a, b, n) - exact_value))
-        #errors['Newton-Cotes'].append(abs(res_newton_cotes(a, b, n) - exact_value))
-
-        # Вычисляем ошибки для метода Гаусса
-        #nodes, weights = calculate_gauss_nodes_weights(n)  # Предположим, что у вас есть эта функция
-        #errors['Gauss'].append(abs(gauss_quadrature(nodes, weights) - exact_value))
-
-    return errors
-
-
-from copy import deepcopy
-import numpy as np
-import matplotlib.pyplot as plt
-from prettytable import PrettyTable
-from colorama import Fore, Style
-
-
-def red_string(var):
-    """Возвращает текст красного цвета."""
-    return Fore.RED + str(var) + Style.RESET_ALL
-
-
-def green_string(var):
-    """Возвращает текст зеленого цвета."""
-    return Fore.GREEN + str(var) + Style.RESET_ALL
 
 
 class Table:
@@ -98,22 +53,23 @@ class Table:
         if highlight_best:
             best_column_idx = rows[2].index(min(rows[2]))
 
-            column_names[best_column_idx] = green_string(column_names[best_column_idx])
-            rows[0][best_column_idx] = green_string(rows[0][best_column_idx])
-            rows[1][best_column_idx] = green_string(rows[1][best_column_idx])
-            rows[2][best_column_idx] = green_string(rows[2][best_column_idx])
+            column_names[best_column_idx] = f"*{column_names[best_column_idx]}*"
+            rows[0][best_column_idx] = f"*{rows[0][best_column_idx]}*"
+            rows[1][best_column_idx] = f"*{rows[1][best_column_idx]}*"
+            rows[2][best_column_idx] = f"*{rows[2][best_column_idx]}*"
 
-        quadratic_info_table = PrettyTable([''] + column_names)
-        quadratic_info_table.add_row(['Partitions'] + rows[0])
-        quadratic_info_table.add_row(['Value'] + rows[1])
-        quadratic_info_table.add_row(['Residue'] + rows[2])
-
-        print(quadratic_info_table)
+        print("Table Overview:\n")
+        for idx, col_name in enumerate(column_names):
+            print(f"{col_name}:")
+            print(f"  Partitions: {rows[0][idx]}")
+            print(f"  Value:      {rows[1][idx]}")
+            print(f"  Residue:    {rows[2][idx]}")
+            print("-" * 30)
 
 
 def func(x: float or np.ndarray) -> float or np.ndarray:
     """Определение целевой функции."""
-    return 3 * np.cos(3.5 * x) * np.exp(4 * x / 3) + 2 * np.sin(3.5 * x) * np.exp(-2 * x / 3) + 4 * x
+    return 3 * np.cos(1.5 * x) * np.exp(x / 4) + 4 * np.sin(3.5 * x) * np.exp(-3 * x) + 4 * x
 
 
 def moment(a: float, b: float, alpha: float, beta: float, degree: int) -> float:
@@ -132,7 +88,6 @@ def cardano_formula(poly: np.ndarray) -> np.ndarray:
 
     p = (3 * poly[0] * poly[2] - poly[1] ** 2) / (9 * poly[0] ** 2)
 
-    # Рассматривается случай, когда (q ** 2 + p ** 3) < 0
     r = np.sign(q) * np.sqrt(np.abs(p))
     phi = np.arccos(q / r ** 3)
 
@@ -174,78 +129,21 @@ def plot_residues_graphics(methods_residues: dict[str, list[float]]):
 
     plt.show()
 
-# def plot_residues_graphics(methods_residues: dict[str, list[float]], y_scale_limit: float = 1e-3):
-#     """Визуализация графиков погрешностей с меньшим масштабом оси Y."""
-#     plt.figure(figsize=(15, 6))
-
-#     # Обычная шкала
-#     plt.subplot(1, 2, 1)
-#     plt.title('График погрешности')
-#     for method, residues in methods_residues.items():
-#         plt.plot(range(len(residues)), residues, label=f'{method} Residues')
-
-#     plt.ylabel('Погрешность')
-#     plt.xlabel('Разбиения')
-#     plt.grid()
-#     plt.legend()
-#     plt.ylim(0, y_scale_limit)  # Устанавливаем ограничение по оси Y
-
-#     # Логарифмическая шкала
-#     plt.subplot(1, 2, 2)
-#     plt.title('График погрешности (в логарифмической шкале)')
-#     for method, residues in methods_residues.items():
-#         plt.plot(range(len(residues)), np.log(np.clip(residues, 1e-12, None)), label=f'{method} Residues')
-
-#     plt.ylabel('Логарифм погрешности')
-#     plt.xlabel('Разбиения')
-#     plt.grid()
-#     plt.legend()
-
-#     plt.show()
-
-#------------------------------
-
-# def plot_errors(errors, n_values):
-#     """Строит график погрешностей для всех методов."""
-#     plt.figure(figsize=(10, 6))
-
-#     for method in ['Left Rectangular', 'Middle Rectangular', 'Trapezoid', 'Simpson', 'Gauss']:
-#         plt.plot(n_values, errors[method], marker='o', label=method)
-
-#     plt.yscale("log")
-#     plt.xlabel("Number of Subdivisions (n)")
-#     plt.ylabel("Absolute Error")
-#     plt.title("Comparison of Errors for Numerical Integration Methods")
-#     plt.grid(True)
-#     plt.legend()
-#     plt.show()
-
-# def plot_newton_cotes_error(errors, n_values):
-#     """Строит график погрешностей для метода Ньютона-Котеса."""
-#     plt.figure(figsize=(8, 5))
-#     plt.plot(n_values, errors['Newton-Cotes'], marker='o', label="Newton-Cotes")
-#     plt.yscale("log")
-#     plt.xlabel("Number of Subdivisions (n)")
-#     plt.ylabel("Absolute Error")
-#     plt.title("Error of Newton-Cotes Method")
-#     plt.grid(True)
-#     plt.legend()
-#     plt.show()
 def main():
-    a = 0
-    b = 2
-    alpha = 0
-    beta = 0.6
+    a = 2.5
+    b = 3.3
+    alpha = 2 / 3
+    beta = 0
     methods = ['Left Rectangle', 'Right Rectangle', 'Middle Rectangle', 'Trapezia', 'Simpson', 'Gauss', 'Newton Cotes']
 
     print('∘ЗАДАНИЕ 1: Вычисление интегралов при помощи составных квадратурных формул.')
     real_value, *_ = exact_quad(func, a, b)
-    real_value_weight, *_ = exact_quad(lambda x: func(x) / (x - a) ** alpha / (b - x) ** beta, a, b)
+    real_value_weight, *_ = exact_quad(F, a, b)
 
-    methods_residues = {mtd: [] for mtd in methods}  # Список погрешностей методов
-    table = Table(methods)  # Таблица лучших значений методов
+    methods_residues = {mtd: [] for mtd in methods}
+    table = Table(methods)
 
-    for n_part in trange(1, 101, desc='Вычисление'):  # Будем увеличивать разбиение и смотреть на поведение погрешности
+    for n_part in trange(1, 101, desc='Вычисление'):
         for method in methods:
             calc_value = quad(func, a, b, method=method, alpha=alpha, beta=beta, num_partitions=n_part)
             residue = abs(real_value_weight - calc_value) if method in ['Gauss', 'Newton Cotes'] \
@@ -254,30 +152,25 @@ def main():
             table.update_column(column=method, values=(n_part, calc_value, residue))
             methods_residues[method].append(residue)
 
-    # Таблица погрешностей методов
     table.show(highlight_best=True)
-
-    # Строим графики погрешностей
     plot_residues_graphics(methods_residues)
 
     print('\n∘ЗАДАНИЕ 2: Методы оценки составных квадратурных формул.')
-    # Погрешность для метода Ньютона-Котса
     nc_quad = lambda n: quad(func, a, b, alpha=alpha, beta=beta, method='Newton Cotes', num_partitions=n)
     nc_residue, nc_step, nc_partition = richardson(nc_quad, gap_len=b - a, min_part=3, eps=10 ** -6)
 
-    print(red_string('Метод Ньютона-Котса'))
-    print(f'Длина шага разбиения: {green_string(nc_step)}')
-    print(f'Разбиение: {green_string(nc_partition)} точек')
-    print(f'Погрешность: {green_string(nc_residue)}\n')
+    print('Метод Ньютона-Котса')
+    print(f'Длина шага разбиения: {nc_step}')
+    print(f'Разбиение: {nc_partition} точек')
+    print(f'Погрешность: {nc_residue}\n')
 
-    # Погрешность для метода Гаусса
     gs_quad = lambda n: quad(func, a, b, alpha=alpha, beta=beta, method='Gauss', num_partitions=n)
     gs_residue, gs_step, gs_partition = richardson(gs_quad, gap_len=b - a, min_part=3, eps=10 ** -6)
 
-    print(red_string('Метод Гаусса'))
-    print(f'Длина шага разбиения: {green_string(gs_step)}')
-    print(f'Разбиение: {green_string(gs_partition)} точек')
-    print(f'Погрешность: {green_string(gs_residue)}\n')
+    print('Метод Гаусса')
+    print(f'Длина шага разбиения: {gs_step}')
+    print(f'Разбиение: {gs_partition} точек')
+    print(f'Погрешность: {gs_residue}\n')
 
 
 if __name__ == '__main__':

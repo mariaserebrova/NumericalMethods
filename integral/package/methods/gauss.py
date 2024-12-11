@@ -1,27 +1,14 @@
 import numpy as np
 from numpy.linalg import solve
 
-def f(x):
-    """Функция для интегрирования."""
-    return (3.5 * np.cos(1.5 * x) * np.exp(x / 4) +
-            4 * np.sin(3.5 * x) * np.exp(-3 * x) +
-            4 * x)
-
-def p(x, a=2.5, b=3.3, alpha=2/3, beta=0):
-    """Весовая функция."""
-    if x <= a or x >= b:
-        return 0  # Возвращаем 0, если x выходит за пределы
-    return (x - a) ** (-alpha) * (b - x) ** (-beta)
-
-def F(x):
-    """Комбинированная функция для интегрирования."""
-    return f(x) * p(x)
 
 def moment(a: float, b: float, alpha: float, beta: float, degree: int) -> float:
-    """Функция для вычисления моментов."""
+    """Вычисление момента распределения."""
     coeff = max(alpha, beta)
     moment_val = lambda x: x ** (degree - coeff + 1) / (degree - coeff + 1)
+
     return moment_val(b) - moment_val(a)
+
 
 def cardano_formula(poly: np.ndarray) -> np.ndarray:
     """Формула Кардано для нахождения корней кубического уравнения."""

@@ -5,8 +5,10 @@ from package.methods.richardson import *
 
 
 
-def f(x):
-    return(3.5 * np.cos(1.5 * x) * np.exp(x / 4) + 4 * np.sin(3.5 * x) * np.exp(-1 * 3 * x) + 4 * x)
+# def f(x):
+#     return(3 * np.cos(1.5 * x) * np.exp(x / 4) + 4 * np.sin(3.5 * x) * np.exp(-1 * 3 * x) + 4 * x)
+
+
 def quad_left_rect(func, a: float, b: float, num_partitions: int = 100) -> float:
     """Квадратурная формула левого прямоугольника. АСТ = 0"""
     result = 0
