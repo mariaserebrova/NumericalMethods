@@ -1,6 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.integrate import quad as exact_quad
+import seaborn as sns
+
 
 from package.methods.compound_quadrature_formulas import *
 from package.methods.newton_cotes import *
@@ -10,7 +12,6 @@ from package.methods.compound_quadrature_formulas import quad
 
 from tqdm import trange
 from copy import deepcopy
-from prettytable import PrettyTable
 
 
 def f(x):
@@ -101,32 +102,60 @@ def cardano_formula(poly: np.ndarray) -> np.ndarray:
     return roots
 
 
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+import matplotlib.pyplot as plt
+import numpy as np
+
 def plot_residues_graphics(methods_residues: dict[str, list[float]]):
-    """Визуализация графиков погрешностей."""
-    plt.figure(figsize=(15, 6))
+    """Визуализация графиков погрешностей с улучшениями для оригинальности."""
 
-    # Обычная шкала
+    # Устанавливаем стиль Matplotlib
+    plt.style.use('ggplot')  # Применяем стиль 'ggplot', который выглядит красиво и уникально
+
+    # Создание фигуры для графиков
+    plt.figure(figsize=(14, 7))
+
+    # Цветовая палитра для линий
+    colors = plt.cm.tab10(np.linspace(0, 1, len(methods_residues)))  # Уникальные цвета для каждой линии
+
+    # График на обычной шкале
     plt.subplot(1, 2, 1)
-    plt.title('График погрешности')
-    for method, residues in methods_residues.items():
-        plt.plot(range(len(residues)), residues, label=f'{method} Residues')
+    plt.title('error chart', fontsize=16)
 
-    plt.ylabel('Погрешность')
-    plt.xlabel('Разбиения')
-    plt.grid()
-    plt.legend()
+    for idx, (method, residues) in enumerate(methods_residues.items()):
+        # Применение уникальных цветов для каждой линии
+        plt.plot(range(len(residues)), residues, label=f'{method} Residues', linestyle='-', linewidth=2, color=colors[idx])
+        # Добавление теней под линиями для визуального эффекта
+        plt.fill_between(range(len(residues)), residues, alpha=0.2, color=colors[idx])  # Полупрозрачная заливка под графиком
 
-    # Логарифмическая шкала
+    plt.ylabel('error', fontsize=14)
+    plt.xlabel('partitions', fontsize=14)
+    plt.grid(True, linestyle='--', alpha=0.5)  # Сетка с полупрозрачностью
+    plt.legend(fontsize=12)
+
+    # График в логарифмической шкале
     plt.subplot(1, 2, 2)
-    plt.title('График погрешности (в логарифмической шкале)')
-    for method, residues in methods_residues.items():
-        plt.plot(range(len(residues)), np.log(np.array(residues)), label=f'{method} Residues')
+    plt.title('error graph in logarithmic scale', fontsize=16)
 
-    plt.ylabel('Логарифм погрешности')
-    plt.xlabel('Разбиения')
-    plt.grid()
-    plt.legend()
+    for idx, (method, residues) in enumerate(methods_residues.items()):
+        # Применение уникальных цветов для каждой линии
+        plt.plot(range(len(residues)), np.log(np.array(residues)), label=f'{method} Residues', linestyle='-.', linewidth=2, color=colors[idx])
+        # Добавление теней под линиями для визуального эффекта
+        plt.fill_between(range(len(residues)), np.log(np.array(residues)), alpha=0.2, color=colors[idx])  # Полупрозрачная заливка под графиком
 
+    plt.ylabel('logarithm of error', fontsize=14)
+    plt.xlabel('partitions', fontsize=14)
+    plt.grid(True, linestyle='--', alpha=0.5)  # Сетка с полупрозрачностью
+    plt.legend(fontsize=12)
+
+    # Применение tight_layout для улучшения размещения графиков
+    plt.tight_layout()
     plt.show()
 
 def main():
